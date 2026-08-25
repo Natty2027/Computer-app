@@ -1,0 +1,21 @@
+modules = ["nodejs-20"]
+run = "npm run dev"
+entrypoint = "src/App.tsx"
+
+# Dev server (the "Run" button) — Vite on 0.0.0.0:5173, mapped to the webview.
+[[ports]]
+localPort = 5173
+externalPort = 80
+
+# Production hosting: build the SPA and serve the static dist/ folder.
+# In the Deployments UI pick "Static", or this config is used directly.
+[deployment]
+deploymentTarget = "static"
+build = ["npm", "run", "build"]
+publicDir = "dist"
+
+# Client-side routing: serve index.html for any unknown path so deep links
+# like /today or /env/:id/practice work on refresh instead of 404ing.
+[[deployment.rewrites]]
+from = "/*"
+to = "/index.html"

@@ -27,6 +27,13 @@ import EnvQuizTakePage from "@/pages/env-quiz-take";
 import EnvPracticePage from "@/pages/env-practice";
 import EnvTutorPage from "@/pages/env-tutor";
 import EnvHighlightsPage from "@/pages/env-highlights";
+import EnvFlashcardsPage from "@/pages/env-flashcards";
+import EnvDecksPage from "@/pages/env-decks";
+import TodayPage from "@/pages/today";
+import DailyPage from "@/pages/daily";
+import CalendarPage from "@/pages/calendar";
+import StatsPage from "@/pages/stats";
+import AchievementsPage from "@/pages/achievements";
 import PrivacyPage from "@/pages/privacy";
 
 // React Query tuning. See artifacts/cognivate-mobile/app/_layout.tsx for
@@ -188,14 +195,21 @@ function AppRoutes() {
       <Route path="/sign-in/*?" component={SignInPage} />
       <Route path="/sign-up/*?" component={SignUpPage} />
       <Route path="/new"><Protected><NewEnvPage /></Protected></Route>
+      <Route path="/today"><Protected><TodayPage /></Protected></Route>
+      <Route path="/daily"><Protected><DailyPage /></Protected></Route>
+      <Route path="/calendar"><Protected><CalendarPage /></Protected></Route>
+      <Route path="/stats"><Protected><StatsPage /></Protected></Route>
+      <Route path="/achievements"><Protected><AchievementsPage /></Protected></Route>
       <Route path="/env/:id"><Protected><EnvDashboardPage /></Protected></Route>
       <Route path="/env/:id/files"><Protected><EnvFilesPage /></Protected></Route>
       <Route path="/env/:id/sections"><Protected><EnvSectionsPage /></Protected></Route>
       <Route path="/env/:id/vocabulary"><Protected><EnvVocabularyPage /></Protected></Route>
       <Route path="/env/:id/formulas"><Protected><EnvFormulasPage /></Protected></Route>
+      <Route path="/env/:id/flashcards"><Protected><EnvFlashcardsPage /></Protected></Route>
       <Route path="/env/:id/quizzes"><Protected><EnvQuizzesPage /></Protected></Route>
       <Route path="/env/:id/quizzes/:quizId"><Protected><EnvQuizTakePage /></Protected></Route>
       <Route path="/env/:id/practice"><Protected><EnvPracticePage /></Protected></Route>
+      <Route path="/env/:id/decks"><Protected><EnvDecksPage /></Protected></Route>
       <Route path="/env/:id/tutor"><Protected><EnvTutorPage /></Protected></Route>
       <Route path="/env/:id/highlights"><Protected><EnvHighlightsPage /></Protected></Route>
       <Route component={NotFound} />
