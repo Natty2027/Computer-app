@@ -12,6 +12,8 @@ import {
   PencilRuler,
   MessagesSquare,
   Highlighter,
+  Layers,
+  BookMarked,
 } from "lucide-react";
 
 const TABS = [
@@ -20,8 +22,10 @@ const TABS = [
   { href: "/sections", label: "Outline", Icon: ListTree },
   { href: "/vocabulary", label: "Vocabulary", Icon: GraduationCap },
   { href: "/formulas", label: "Formulas", Icon: Calculator },
+  { href: "/flashcards", label: "Flashcards", Icon: Layers },
   { href: "/quizzes", label: "Quizzes", Icon: Sparkles },
   { href: "/practice", label: "Practice", Icon: PencilRuler },
+  { href: "/decks", label: "Decks", Icon: BookMarked },
   { href: "/tutor", label: "Tutor", Icon: MessagesSquare },
   { href: "/highlights", label: "Highlights", Icon: Highlighter },
 ];
@@ -71,9 +75,9 @@ export function EnvLayout({ id, children }: { id: string; children: ReactNode })
               href={full}
               data-testid={`tab-${label.toLowerCase()}`}
               className={cn(
-                "flex shrink-0 items-center gap-2 rounded-lg px-3 py-1.5 text-sm transition-colors",
+                "flex shrink-0 items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium transition-colors",
                 active
-                  ? "bg-primary text-primary-foreground"
+                  ? "bg-brand text-brand-foreground shadow-[var(--shadow-brand)]"
                   : "text-muted-foreground hover:bg-secondary hover:text-foreground",
               )}
             >
