@@ -15,6 +15,7 @@ import {
 import { useClerk, useUser } from "@clerk/react";
 
 import { cn } from "@/lib/utils";
+import { AUTH_DISABLED } from "@/lib/authMode";
 import { StreakXpChip } from "@/components/study/StreakXpChip";
 
 const NAV = [
@@ -31,10 +32,39 @@ function isActive(location: string, href: string, exact?: boolean): boolean {
   return location === href || location.startsWith(`${href}/`);
 }
 
-export function AppLayout({ children }: { children: ReactNode }) {
-  const [location] = useLocation();
+// Clerk-bound account controls. Only mounted when auth is enabled — otherwise
+// these hooks would run without a ClerkProvider. AUTH_DISABLED is a build-time
+// constant so this component is either always or never mounted.
+function AccountControls({ compact }: { compact?: boolean }) {
   const { signOut } = useClerk();
   const { user } = useUser();
+  return (
+    <>
+      {!compact && user && (
+        <span
+          data-testid="text-user-email"
+          className="hidden max-w-[160px] truncate text-sm text-muted-foreground lg:inline"
+          title={user.primaryEmailAddress?.emailAddress ?? ""}
+        >
+          {user.primaryEmailAddress?.emailAddress ?? user.username ?? ""}
+        </span>
+      )}
+      <button
+        type="button"
+        onClick={() => signOut({ redirectUrl: import.meta.env.BASE_URL })}
+        data-testid="button-sign-out"
+        className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-sm hover:bg-secondary"
+        aria-label="Sign out"
+      >
+        <LogOut className="h-3.5 w-3.5" />
+        Sign out
+      </button>
+    </>
+  );
+}
+
+export function AppLayout({ children }: { children: ReactNode }) {
+  const [location] = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
@@ -76,25 +106,15 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
           <div className="flex items-center gap-2">
             <StreakXpChip className="hidden sm:flex" />
-            {user && (
-              <span
-                data-testid="text-user-email"
-                className="hidden max-w-[160px] truncate text-sm text-muted-foreground lg:inline"
-                title={user.primaryEmailAddress?.emailAddress ?? ""}
-              >
-                {user.primaryEmailAddress?.emailAddress ?? user.username ?? ""}
+            {AUTH_DISABLED ? (
+              <span className="hidden rounded-full border border-border px-3 py-1 text-xs text-muted-foreground sm:inline">
+                Preview
               </span>
+            ) : (
+              <div className="hidden items-center gap-2 sm:flex">
+                <AccountControls />
+              </div>
             )}
-            <button
-              type="button"
-              onClick={() => signOut({ redirectUrl: import.meta.env.BASE_URL })}
-              data-testid="button-sign-out"
-              className="hidden items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-sm hover:bg-secondary sm:inline-flex"
-              aria-label="Sign out"
-            >
-              <LogOut className="h-3.5 w-3.5" />
-              Sign out
-            </button>
             {/* Mobile menu toggle */}
             <button
               type="button"
@@ -131,14 +151,11 @@ export function AppLayout({ children }: { children: ReactNode }) {
               })}
               <div className="mt-2 flex items-center justify-between border-t border-border pt-3">
                 <StreakXpChip />
-                <button
-                  type="button"
-                  onClick={() => signOut({ redirectUrl: import.meta.env.BASE_URL })}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-sm hover:bg-secondary"
-                >
-                  <LogOut className="h-3.5 w-3.5" />
-                  Sign out
-                </button>
+                {AUTH_DISABLED ? (
+                  <span className="rounded-full border border-border px-3 py-1 text-xs text-muted-foreground">Preview</span>
+                ) : (
+                  <AccountControls compact />
+                )}
               </div>
             </div>
           </nav>
