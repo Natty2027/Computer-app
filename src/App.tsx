@@ -10,6 +10,7 @@ import {
 } from "@clerk/react";
 import { publishableKeyFromHost } from "@clerk/react/internal";
 import { shadcn } from "@clerk/themes";
+import { AUTH_DISABLED } from "@/lib/authMode";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppLayout } from "@/components/AppLayout";
@@ -52,10 +53,12 @@ const queryClient = new QueryClient({
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
-const clerkPubKey = publishableKeyFromHost(
-  window.location.hostname,
-  import.meta.env.VITE_CLERK_PUBLISHABLE_KEY,
-);
+const clerkPubKey = AUTH_DISABLED
+  ? ""
+  : publishableKeyFromHost(
+      window.location.hostname,
+      import.meta.env.VITE_CLERK_PUBLISHABLE_KEY,
+    );
 
 const clerkProxyUrl = import.meta.env.VITE_CLERK_PROXY_URL;
 
@@ -65,7 +68,7 @@ function stripBase(path: string): string {
     : path;
 }
 
-if (!clerkPubKey) {
+if (!AUTH_DISABLED && !clerkPubKey) {
   throw new Error("Missing VITE_CLERK_PUBLISHABLE_KEY");
 }
 
@@ -119,6 +122,7 @@ const clerkAppearance = {
 };
 
 function SignInPage() {
+  if (AUTH_DISABLED) return <Redirect to="/" />;
   return (
     <div className="flex min-h-[100dvh] items-center justify-center bg-background px-4 py-10">
       <SignIn
@@ -131,6 +135,7 @@ function SignInPage() {
 }
 
 function SignUpPage() {
+  if (AUTH_DISABLED) return <Redirect to="/" />;
   return (
     <div className="flex min-h-[100dvh] items-center justify-center bg-background px-4 py-10">
       <SignUp
@@ -143,6 +148,13 @@ function SignUpPage() {
 }
 
 function HomeRoute() {
+  if (AUTH_DISABLED) {
+    return (
+      <AppLayout>
+        <LibraryPage />
+      </AppLayout>
+    );
+  }
   return (
     <>
       <Show when="signed-in">
@@ -158,6 +170,7 @@ function HomeRoute() {
 }
 
 function Protected({ children }: { children: React.ReactNode }) {
+  if (AUTH_DISABLED) return <AppLayout>{children}</AppLayout>;
   return (
     <>
       <Show when="signed-in">
@@ -240,10 +253,22 @@ function ClerkProviderWithRoutes() {
   );
 }
 
+// Auth-disabled tree: same routes, but no ClerkProvider / session wiring.
+function NoAuthRoutes() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <AppRoutes />
+        <Toaster />
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+}
+
 function App() {
   return (
     <WouterRouter base={basePath}>
-      <ClerkProviderWithRoutes />
+      {AUTH_DISABLED ? <NoAuthRoutes /> : <ClerkProviderWithRoutes />}
     </WouterRouter>
   );
 }
