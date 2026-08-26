@@ -25,6 +25,21 @@ export type PracticeSourceStatus =
 
 export type PracticeProblemType = "calculation" | "conceptual" | "application";
 
+/**
+ * The format the server actually generated. Same values as
+ * PracticeProblemType, but a distinct concept: `problemType` is what the
+ * user REQUESTS (including "auto"), while `problemFormat` is what the
+ * model CHOSE for the material.
+ */
+export type PracticeProblemFormat = "calculation" | "conceptual" | "application";
+
+/**
+ * Request-side format selector. "auto" (the default) lets the server
+ * inspect the material and pick the most effective format; the three
+ * concrete values pin it as a user override.
+ */
+export type PracticeProblemTypeRequest = PracticeProblemType | "auto";
+
 export type PracticeFactRole = "needed" | "helpful_context" | "not_used";
 
 export type PracticeFact = {
@@ -68,6 +83,13 @@ export type InteractivePracticeProblem = {
   sourceReferences: PracticeSourceReference[];
   tokenPools?: Record<string, string[]>;
   facts?: PracticeFact[] | null;
+  /** Format the server chose for this problem (adaptive mode) or the
+   * format the user pinned. Null/absent for problems generated before
+   * adaptive mode. */
+  problemFormat?: PracticeProblemFormat | null;
+  /** Adaptive difficulty (1..5) the problem was generated at, or null
+   * when there was no history to adapt from. */
+  difficulty?: number | null;
 };
 
 export type StartAttemptResponse = {
@@ -119,7 +141,9 @@ export type CompleteAttemptResponse = {
 export type StartPracticeArgs = {
   focus?: string | null;
   sectionId?: string | null;
-  problemType?: PracticeProblemType;
+  /** "auto" (default) asks the server to adapt the format to the
+   * material; a concrete value pins it. */
+  problemType?: PracticeProblemTypeRequest;
 };
 
 export type SubmitStepArgs = {

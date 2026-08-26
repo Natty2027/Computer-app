@@ -35,17 +35,25 @@ import {
   useCompleteAttempt,
   useGetPracticeQuota,
   type InteractivePracticeProblem,
-  type PracticeProblemType,
+  type PracticeProblemTypeRequest,
+  type PracticeProblemFormat,
   type StepReveal,
   type CompleteAttemptResponse,
 } from "@/lib/api/practice";
 import { isDailyLimitError } from "@/lib/api/premium";
 
-const PROBLEM_TYPES: { value: PracticeProblemType; label: string }[] = [
+const PROBLEM_TYPES: { value: PracticeProblemTypeRequest; label: string }[] = [
+  { value: "auto", label: "Adaptive" },
   { value: "calculation", label: "Calculation" },
   { value: "conceptual", label: "Conceptual" },
   { value: "application", label: "Application" },
 ];
+
+const FORMAT_LABELS: Record<PracticeProblemFormat, string> = {
+  calculation: "Calculation",
+  conceptual: "Conceptual",
+  application: "Application",
+};
 
 type RowStatus =
   | "correct"
@@ -85,7 +93,7 @@ export default function EnvPracticePage() {
   // Generator config
   const [focus, setFocus] = useState("");
   const [sectionId, setSectionId] = useState(sectionFromUrl);
-  const [problemType, setProblemType] = useState<PracticeProblemType>("calculation");
+  const [problemType, setProblemType] = useState<PracticeProblemTypeRequest>("auto");
   const [strict, setStrict] = useState(false);
 
   // Attempt state
@@ -289,6 +297,11 @@ export default function EnvPracticePage() {
                   </button>
                 ))}
               </div>
+              <p className="text-xs text-muted-foreground">
+                {problemType === "auto"
+                  ? "Adaptive reads your material and picks the most effective format — calculations for quantitative topics, conceptual questions for theory."
+                  : "Pinned to a specific format. Switch to Adaptive to let Cognivate choose the best fit for your material."}
+              </p>
             </div>
 
             <div className="flex items-center justify-between rounded-xl border border-border bg-secondary/40 p-3">
@@ -334,7 +347,10 @@ export default function EnvPracticePage() {
             <CardContent className="space-y-3 p-5">
               <div className="flex items-start justify-between gap-3">
                 <h3 className="text-lg font-bold">{problem.goal}</h3>
-                <SourceBadge status={problem.sourceStatus} />
+                <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+                  <FormatBadge problem={problem} />
+                  <SourceBadge status={problem.sourceStatus} />
+                </div>
               </div>
               <p className="whitespace-pre-wrap text-sm leading-relaxed">{problem.prompt}</p>
             </CardContent>
@@ -401,6 +417,24 @@ export default function EnvPracticePage() {
 }
 
 // ---------- Sub-components ----------
+
+/**
+ * Shows which format the adaptive selector chose for this problem, plus
+ * the difficulty it targeted. Renders nothing for older problems that
+ * predate adaptive mode (no problemFormat on the payload).
+ */
+function FormatBadge({ problem }: { problem: InteractivePracticeProblem }) {
+  if (!problem.problemFormat) return null;
+  const label = FORMAT_LABELS[problem.problemFormat] ?? problem.problemFormat;
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full border border-border bg-secondary/60 px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+      {label}
+      {typeof problem.difficulty === "number" && (
+        <span className="text-muted-foreground/70">· Lvl {problem.difficulty}</span>
+      )}
+    </span>
+  );
+}
 
 function FactsCard({ problem }: { problem: InteractivePracticeProblem }) {
   const groups: { role: string; label: string; className: string }[] = [
@@ -618,7 +652,10 @@ function ResultCard({
 
       <Card>
         <CardContent className="space-y-3 p-5">
-          <div className="text-sm font-semibold">Final answer</div>
+          <div className="flex items-center justify-between gap-2">
+            <div className="text-sm font-semibold">Final answer</div>
+            <FormatBadge problem={problem} />
+          </div>
           <div className="font-mono text-base">{problem.finalAnswer}</div>
           <p className="text-sm text-muted-foreground">{problem.interpretation}</p>
           <SourceCitations refs={problem.sourceReferences} />
