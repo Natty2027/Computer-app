@@ -3,6 +3,7 @@ import { useListSections, getListSectionsQueryKey } from "@workspace/api-client-
 import { EnvLayout } from "@/components/EnvLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { SourceBadge, SourceCitations } from "@/components/SourceBadge";
+import { SimplifyButton } from "@/components/SimplifyButton";
 
 export default function EnvSectionsPage() {
   const { id } = useParams<{ id: string }>();
@@ -28,6 +29,7 @@ export default function EnvSectionsPage() {
                     <SourceBadge status={s.sourceStatus} />
                   </div>
                   <p className="text-sm leading-relaxed text-foreground/90 whitespace-pre-wrap">{s.summary}</p>
+                  <SimplifyButton envId={id} text={`${s.title}. ${s.summary ?? ""}`} />
                   {s.keyConcepts && s.keyConcepts.length > 0 && (
                     <div className="flex flex-wrap gap-1.5">
                       {s.keyConcepts.map((c, j) => (

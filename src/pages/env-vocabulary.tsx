@@ -3,6 +3,7 @@ import { useListVocabulary, getListVocabularyQueryKey } from "@workspace/api-cli
 import { EnvLayout } from "@/components/EnvLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { SourceBadge, SourceCitations } from "@/components/SourceBadge";
+import { SimplifyButton } from "@/components/SimplifyButton";
 
 export default function EnvVocabularyPage() {
   const { id } = useParams<{ id: string }>();
@@ -34,6 +35,7 @@ export default function EnvVocabularyPage() {
                     ))}
                   </div>
                 )}
+                <SimplifyButton envId={id} text={`${v.term}: ${v.definition}${v.example ? ` Example: ${v.example}` : ""}`} />
                 <SourceCitations refs={v.sourceReferences} />
               </CardContent>
             </Card>

@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { SourceBadge, SourceCitations } from "@/components/SourceBadge";
 import { TutorMessageContent } from "@/components/tutor/TutorMessageContent";
+import { SimplifyButton } from "@/components/SimplifyButton";
 import { Send, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -82,7 +83,10 @@ export default function EnvTutorPage() {
                     )}
                     {m.role === "assistant" && (
                       <div className="mt-2 space-y-1.5">
-                        {m.sourceStatus && <SourceBadge status={m.sourceStatus} />}
+                        <div className="flex items-center gap-2">
+                          {m.sourceStatus && <SourceBadge status={m.sourceStatus} />}
+                          <SimplifyButton envId={id} text={m.content} />
+                        </div>
                         <SourceCitations refs={m.sourceReferences} />
                       </div>
                     )}

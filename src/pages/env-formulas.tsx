@@ -4,6 +4,7 @@ import { EnvLayout } from "@/components/EnvLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { SourceBadge, SourceCitations } from "@/components/SourceBadge";
+import { SimplifyButton } from "@/components/SimplifyButton";
 import { PencilRuler } from "lucide-react";
 
 export default function EnvFormulasPage() {
@@ -41,6 +42,10 @@ export default function EnvFormulasPage() {
                   </div>
                 </div>
                 <p className="text-sm leading-relaxed">{f.plainMeaning}</p>
+                <SimplifyButton
+                  envId={id}
+                  text={`${f.name} (${f.expression}). ${f.plainMeaning ?? ""}${f.whenToUse ? ` When to use: ${f.whenToUse}` : ""}`}
+                />
                 {f.variables && f.variables.length > 0 && (
                   <div>
                     <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Variables</div>
