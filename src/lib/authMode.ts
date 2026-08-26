@@ -1,14 +1,15 @@
 /**
- * Auth toggle. When auth is disabled, the app skips Clerk entirely: no
- * sign-in wall, no ClerkProvider, and Protected routes render directly.
+ * Auth toggle. Real Clerk sign-in is ON by default — the app works like the
+ * iOS client: the user signs in, and the Clerk session token is sent as a
+ * bearer on every API call so the backend returns that user's real data.
  *
- * Defaults to DISABLED (preview mode) unless VITE_DISABLE_AUTH is explicitly
- * set to "false". Re-enable real sign-in by building with
- * VITE_DISABLE_AUTH=false (and a valid VITE_CLERK_PUBLISHABLE_KEY).
+ * Set VITE_DISABLE_AUTH="true" ONLY for a no-login UI preview (e.g. local
+ * dev where the production Clerk key can't load). In that mode the backend
+ * still requires a session, so account data will be empty/401.
  *
- * NOTE: the backend still requires a Clerk session, so with auth disabled the
- * UI renders but account-scoped API calls (library, practice, tutor, etc.)
- * return 401 and show empty/error states. This is a preview of the interface,
- * not a working signed-out product.
+ * IMPORTANT: for sign-in to succeed, the app must be served from a domain your
+ * Clerk production instance allows (cognivate.co or a registered subdomain).
+ * Production Clerk keys are domain-locked and will NOT authenticate on
+ * localhost or *.replit.app.
  */
-export const AUTH_DISABLED = import.meta.env.VITE_DISABLE_AUTH !== "false";
+export const AUTH_DISABLED = import.meta.env.VITE_DISABLE_AUTH === "true";

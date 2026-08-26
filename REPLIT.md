@@ -15,14 +15,24 @@ This app is a static Vite SPA that talks to the existing Cognivate API
 4. **Deploy**: Deployments → **Static**. The build command is `npm run build`
    and the public directory is `dist` (already set in `.replit`). SPA fallback
    is configured so deep links don't 404.
-5. **Clerk**: in the Clerk dashboard, add your Replit deploy domain
-   (e.g. `your-app.replit.app`) to the allowed origins so sign-in loads there.
-   The app sends the Clerk session as a bearer token, so cross-origin API calls
-   to `cognivate.co` work; the API's CORS is already open.
+5. **Clerk / custom domain — required for sign-in to work.**
+   The app authenticates exactly like the iOS app (Clerk session → bearer token
+   → real data). But your **production** Clerk key only loads on domains your
+   Clerk instance approves. A bare `*.replit.app` URL will NOT authenticate.
+   To make sign-in work:
+   - Attach a **custom domain** to the Replit deployment — use a subdomain of
+     your app domain, e.g. `app.cognivate.co` (Deployments → Settings → Link a
+     domain; add the CNAME it gives you in your DNS).
+   - In the **Clerk dashboard**, add that domain to the production instance
+     (Domains → add `app.cognivate.co` as a satellite/allowed domain).
+   - Redeploy. Sign-in and real data now work like iOS.
 
 ## Notes
 
 - Node 20 is pinned in `.replit` (Vite 7 needs ≥ 20.19).
-- If you later host on a `cognivate.co` subdomain instead, no Clerk origin
-  change is needed (same-site cookies).
+- `VITE_DISABLE_AUTH=true` gives a no-login UI preview, but the backend still
+  requires a session so account data stays empty — use it only to look at the
+  interface, not for real data.
+- Simplest of all: host on `cognivate.co` itself (same origin as the API +
+  Clerk) and auth "just works" with no dashboard changes.
 - To point at a different backend, change `VITE_API_BASE_URL` and rebuild.
