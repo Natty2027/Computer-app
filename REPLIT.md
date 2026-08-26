@@ -23,9 +23,16 @@ This app is a static Vite SPA that talks to the existing Cognivate API
    - Attach a **custom domain** to the Replit deployment — use a subdomain of
      your app domain, e.g. `app.cognivate.co` (Deployments → Settings → Link a
      domain; add the CNAME it gives you in your DNS).
-   - In the **Clerk dashboard**, add that domain to the production instance
-     (Domains → add `app.cognivate.co` as a satellite/allowed domain).
+   - In the **Clerk dashboard**, add `app.cognivate.co` to the production
+     instance (Domains). Since it's a subdomain of your primary `cognivate.co`,
+     Clerk shares its session cookie across `*.cognivate.co`, so no satellite
+     config is needed in code — just add the domain.
    - Redeploy. Sign-in and real data now work like iOS.
+
+   If Clerk specifically flags `app.cognivate.co` as a **satellite** domain and
+   sign-in won't complete, that needs `isSatellite`/`domain` props on
+   ClerkProvider — ping me and I'll wire those behind env vars (no rebuild
+   round-trip needed).
 
 ## Notes
 
