@@ -11,6 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { SourceBadge, SourceCitations } from "@/components/SourceBadge";
+import { TutorMessageContent } from "@/components/tutor/TutorMessageContent";
 import { Send, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -39,7 +40,11 @@ export default function EnvTutorPage() {
     const content = text.trim();
     setText("");
     send.mutate(
-      { id, data: { content, mode } },
+      // supportsVisuals isn't in the codegen'd request type yet; the server
+      // reads it inline (same pattern as voiceMode) and the mutator
+      // JSON.stringifies the whole body, so the flag reaches the API.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      { id, data: { content, mode, supportsVisuals: true } as any },
       {
         onSuccess: () => qc.invalidateQueries({ queryKey: getListTutorMessagesQueryKey(id) }),
       },
@@ -64,13 +69,17 @@ export default function EnvTutorPage() {
                 >
                   <div
                     className={cn(
-                      "max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
+                      "rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
                       m.role === "user"
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-secondary text-secondary-foreground",
+                        ? "max-w-[85%] bg-primary text-primary-foreground"
+                        : "max-w-[95%] bg-secondary text-secondary-foreground",
                     )}
                   >
-                    <p className="whitespace-pre-wrap">{m.content}</p>
+                    {m.role === "assistant" ? (
+                      <TutorMessageContent content={m.content} />
+                    ) : (
+                      <p className="whitespace-pre-wrap">{m.content}</p>
+                    )}
                     {m.role === "assistant" && (
                       <div className="mt-2 space-y-1.5">
                         {m.sourceStatus && <SourceBadge status={m.sourceStatus} />}
