@@ -11,7 +11,7 @@ import { EnvLayout } from "@/components/EnvLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FileText, Trash2, Upload, Loader2 } from "lucide-react";
-import { uploadFileAndRegister } from "@/lib/uploadFile";
+import { UploadError, uploadFileToStorage, validateBatch } from "@/lib/uploadFile";
 import { useToast } from "@/hooks/use-toast";
 
 const STATUS_LABEL: Record<string, { label: string; cls: string }> = {
@@ -42,16 +42,44 @@ export default function EnvFilesPage() {
 
   async function handleUpload(list: FileList | null) {
     if (!list) return;
+    const { accepted, rejected } = validateBatch(Array.from(list));
+    if (accepted.length === 0) {
+      toast({
+        title: "Nothing to upload",
+        description: rejected[0]?.reason ?? "No valid files were selected.",
+        variant: "destructive",
+      });
+      return;
+    }
     setUploading(true);
+    // Continue-on-failure: one bad file must not abort the rest. A file counts
+    // as uploaded only when BOTH the storage PUT and the registration succeed.
+    let uploaded = 0;
+    const failures: string[] = [...rejected.map((r) => r.name)];
     try {
-      for (const f of Array.from(list)) {
-        const meta = await uploadFileAndRegister(f);
-        await addFile.mutateAsync({ id, data: meta });
+      for (const f of accepted) {
+        try {
+          const meta = await uploadFileToStorage(f);
+          await addFile.mutateAsync({ id, data: meta });
+          uploaded += 1;
+        } catch (e) {
+          failures.push(f.name);
+          const msg = e instanceof UploadError ? e.userMessage : "Upload failed.";
+          // eslint-disable-next-line no-console
+          if (import.meta.env.DEV) console.error(`[upload] ${f.name}:`, e);
+          toast({ title: `Couldn't upload ${f.name}`, description: msg, variant: "destructive" });
+        }
       }
       qc.invalidateQueries({ queryKey: getListEnvironmentFilesQueryKey(id) });
-      toast({ title: "Files uploaded", description: "Cognivate is re-analyzing your environment." });
-    } catch (e) {
-      toast({ title: "Upload failed", description: String(e), variant: "destructive" });
+      if (uploaded > 0) {
+        toast({
+          title: `${uploaded} file${uploaded === 1 ? "" : "s"} uploaded`,
+          description:
+            failures.length > 0
+              ? `${failures.length} skipped or failed. Cognivate is re-analyzing your environment.`
+              : "Cognivate is re-analyzing your environment.",
+        });
+      }
     } finally {
       setUploading(false);
     }

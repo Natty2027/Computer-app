@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Upload, X, FileText, Loader2 } from "lucide-react";
-import { uploadFileAndRegister } from "@/lib/uploadFile";
+import { UploadError, uploadFileToStorage, validateBatch } from "@/lib/uploadFile";
 import { useToast } from "@/hooks/use-toast";
 
 export default function NewEnvPage() {
@@ -38,18 +38,49 @@ export default function NewEnvPage() {
       toast({ title: "Add at least one file", variant: "destructive" });
       return;
     }
+    const { accepted, rejected } = validateBatch(files);
+    if (accepted.length === 0) {
+      toast({
+        title: "Nothing to upload",
+        description: rejected[0]?.reason ?? "No valid files were selected.",
+        variant: "destructive",
+      });
+      return;
+    }
     setBusy(true);
     try {
       const env = await createEnv.mutateAsync({ data: { title: title.trim() } });
-      for (const [i, f] of files.entries()) {
-        setProgress(`Uploading ${i + 1} of ${files.length}: ${f.name}`);
-        const meta = await uploadFileAndRegister(f);
-        await addFile.mutateAsync({ id: env.id, data: meta });
+      // Continue-on-failure: a file counts only when its PUT AND registration
+      // both succeed; a bad file never blocks the rest or the environment.
+      let uploaded = 0;
+      const failures: string[] = [...rejected.map((r) => r.name)];
+      for (const [i, f] of accepted.entries()) {
+        setProgress(`Uploading ${i + 1} of ${accepted.length}: ${f.name}`);
+        try {
+          const meta = await uploadFileToStorage(f);
+          await addFile.mutateAsync({ id: env.id, data: meta });
+          uploaded += 1;
+        } catch (e) {
+          failures.push(f.name);
+          const msg = e instanceof UploadError ? e.userMessage : "Upload failed.";
+          if (import.meta.env.DEV) console.error(`[upload] ${f.name}:`, e);
+          toast({ title: `Couldn't upload ${f.name}`, description: msg, variant: "destructive" });
+        }
       }
-      toast({ title: "Materials uploaded", description: "Cognivate is analyzing them now." });
+      toast({
+        title: uploaded > 0 ? `${uploaded} file${uploaded === 1 ? "" : "s"} uploaded` : "No files uploaded",
+        description:
+          uploaded > 0
+            ? failures.length > 0
+              ? `${failures.length} skipped or failed. Cognivate is analyzing the rest now.`
+              : "Cognivate is analyzing them now."
+            : "None of the selected files could be uploaded.",
+        variant: uploaded > 0 ? undefined : "destructive",
+      });
       setLocation(`/env/${env.id}`);
     } catch (err) {
-      toast({ title: "Upload failed", description: String(err instanceof Error ? err.message : err), variant: "destructive" });
+      if (import.meta.env.DEV) console.error("[upload] batch failed:", err);
+      toast({ title: "Couldn't create environment", description: "Please try again.", variant: "destructive" });
     } finally {
       setBusy(false);
       setProgress(null);
