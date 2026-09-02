@@ -221,14 +221,27 @@ export const useRequestUploadUrl = <
  * @summary Serve a private object entity
  */
 export const getGetStorageObjectUrl = (objectPath: string) => {
-  return `/api/storage/objects/${objectPath}`;
+  // The stored objectPath is the canonical `/objects/<entityId>` form (or a
+  // bare/legacy path). The route parameter is everything AFTER
+  // `/api/storage/objects/`, so drop a leading slash and a leading `objects/`
+  // segment, then percent-encode each path SEGMENT while preserving the
+  // slashes between them. Interpolating the raw path here previously produced
+  // `/api/storage/objects//objects/…` (double slash + double prefix) and broke
+  // nested paths — encode per-segment so folders survive without being
+  // collapsed or double-encoded.
+  const entity = objectPath.replace(/^\/+/, "").replace(/^objects\//, "");
+  const encoded = entity.split("/").map(encodeURIComponent).join("/");
+  return `/api/storage/objects/${encoded}`;
 };
 
 export const getStorageObject = async (
   objectPath: string,
   options?: RequestInit,
 ): Promise<Blob> => {
+  // Explicitly ask for a binary Blob rather than relying on content-type
+  // inference, so a PDF/DOC/DOCX always comes back as raw bytes.
   return customFetch<Blob>(getGetStorageObjectUrl(objectPath), {
+    responseType: "blob",
     ...options,
     method: "GET",
   });

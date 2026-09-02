@@ -5,5 +5,11 @@ export {
   setAuthTokenGetter,
   setLanguageGetter,
   customFetch,
+  ApiError,
+  ResponseParseError,
 } from "./custom-fetch";
-export type { AuthTokenGetter, LanguageGetter } from "./custom-fetch";
+export type {
+  AuthTokenGetter,
+  LanguageGetter,
+  CustomFetchOptions,
+} from "./custom-fetch";
